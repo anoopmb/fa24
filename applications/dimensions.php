@@ -11,7 +11,7 @@
 ***********************************************************************/
 class dimensions_app extends application
 {
-	function dimensions_app()
+	function __construct()
 	{
 		$dim = get_company_pref('use_dimension');
 		$this->application("proj", _($this->help_context = "&Dimensions"), $dim);
@@ -37,6 +37,11 @@ class dimensions_app extends application
 
 			$this->add_extensions();
 		}
+	}
+
+	function dimensions_app()
+	{
+        self::__construct();
 	}
 }
 

@@ -63,7 +63,7 @@ include_once (dirname(__FILE__).'/fpdi/fpdi.php');
 
 class Cpdf extends FPDI {
 
-	function Cpdf($pageSize='A4', $lang=null, $pageOrientation='P')
+	function __construct($pageSize='A4', $lang=null, $pageOrientation='P')
 	{
 		$this->TCPDF($pageOrientation, 'pt', $pageSize);//, $uni, $enc);
 		$this->SetLang($lang);
@@ -74,6 +74,12 @@ class Cpdf extends FPDI {
 		$this->SetLineWidth(1);
 		$this->cMargin = 0;
 	}
+
+	function Cpdf($pageSize='A4', $lang=null, $pageOrientation='P')
+	{
+        self::__construct($pageSize, $lang, $pageOrientation);
+	}
+
 	/*
 		Set lamguage for next report
 	*/

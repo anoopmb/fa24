@@ -90,7 +90,7 @@ class pdf_parser {
      *
      * @param string $filename  Source-Filename
      */
-	function pdf_parser($filename) {
+	function __construct($filename) {
         $this->filename = $filename;
         
         $this->f = @fopen($this->filename, "rb");
@@ -111,6 +111,10 @@ class pdf_parser {
         $this->pdf_read_root();
     }
     
+	function pdf_parser($filename) {
+        self::__construct($filename);
+	}
+
     /**
      * Close the opened file
      */

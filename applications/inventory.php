@@ -11,7 +11,7 @@
 ***********************************************************************/
 class inventory_app extends application
 {
-	function inventory_app()
+	function __construct()
 	{
 		$this->application("stock", _($this->help_context = "&Items and Inventory"));
 
@@ -54,6 +54,11 @@ class inventory_app extends application
 			"inventory/cost_update.php?", 'SA_STANDARDCOST', MENU_MAINTENANCE);
 
 		$this->add_extensions();
+	}
+
+	function inventory_app()
+	{
+        self::__construct();
 	}
 }
 

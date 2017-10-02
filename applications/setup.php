@@ -11,7 +11,7 @@
 ***********************************************************************/
 class setup_app extends application
 {
-	function setup_app()
+	function __construct()
 	{
 		$this->application("system", _($this->help_context = "S&etup"));
 
@@ -77,6 +77,11 @@ class setup_app extends application
 			"admin/inst_upgrade.php?", 'SA_SOFTWAREUPGRADE', MENU_UPDATE);
 
 		$this->add_extensions();
+	}
+
+	function setup_app()
+	{
+        self::__construct();
 	}
 }
 

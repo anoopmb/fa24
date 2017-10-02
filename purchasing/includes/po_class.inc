@@ -47,11 +47,16 @@ class purch_order
 
 	var $fixed_asset = false;
 
-	function purch_order()
+	function __construct()
 	{
 		/*Constructor function initialises a new purchase order object */
 		$this->line_items = array();
 		$this->lines_on_order = $this->order_no = $this->supplier_id = 0;
+	}
+	
+	function purch_order()
+	{
+        self::__construct();
 	}
 	
 	function set_supplier($supplier_id, $supplier_name, $curr_code, $tax_group_id, $tax_included)

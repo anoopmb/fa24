@@ -66,7 +66,7 @@ class fpdi_pdf_parser extends pdf_parser {
      * @param string $filename  Source-Filename
      * @param object $fpdi      Object of type fpdi
      */
-    function fpdi_pdf_parser($filename,&$fpdi) {
+    function __construct($filename,&$fpdi) {
         $this->fpdi =& $fpdi;
 		$this->filename = $filename;
 		
@@ -82,6 +82,10 @@ class fpdi_pdf_parser extends pdf_parser {
         $this->page_count = count($this->pages);
     }
     
+    function fpdi_pdf_parser($filename,&$fpdi) {
+        self::__construct($filename,$fpdi);
+	}
+
     /**
      * Overwrite parent::error()
      *

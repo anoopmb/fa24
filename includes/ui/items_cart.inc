@@ -40,7 +40,7 @@ class items_cart
 
 	var $fixed_asset;
 
-	function items_cart($type, $trans_no=0)
+	function __construct($type, $trans_no=0)
 	{
 		$this->trans_type = $type;
 		$this->order_id = $trans_no;
@@ -48,6 +48,11 @@ class items_cart
 		if (in_array($type, array(ST_LOCTRANSFER, ST_INVADJUST, ST_COSTUPDATE, ST_MANUISSUE, ST_MANURECEIVE, ST_JOURNAL)))
 			$this->currency = get_company_pref('curr_default');
 		$this->rate = 1;
+	}
+
+	function items_cart($type, $trans_no=0)
+	{
+        self::__construct($type, $trans_no);
 	}
 
 	// --------------- line item functions
@@ -465,7 +470,7 @@ class line_item
 	var $price;
 	var $standard_cost;
 
-	function line_item ($stock_id, $qty, $standard_cost=null, $description=null)
+	function __construct ($stock_id, $qty, $standard_cost=null, $description=null)
 	{
 		$item_row = get_item($stock_id);
 
@@ -490,6 +495,11 @@ class line_item
 		//$this->price = $price;
 		$this->price = 0;
 	}
+
+	function line_item ($stock_id, $qty, $standard_cost=null, $description=null)
+	{
+        self::__construct($stock_id, $qty, $standard_cost, $description);
+	}
 }
 
 //---------------------------------------------------------------------------------------
@@ -509,7 +519,7 @@ class gl_item
 	var $branch_id;
 	var $date;
 
-	function gl_item($code_id=null, $dimension_id=0, $dimension2_id=0, $amount=0, $memo='',
+	function __construct($code_id=null, $dimension_id=0, $dimension2_id=0, $amount=0, $memo='',
 		$act_descr=null, $person_id=null, $date=null)
 	{
 		//echo "adding $index, $code_id, $dimension_id, $amount, $reference<br>";
@@ -534,5 +544,11 @@ class gl_item
 		$this->amount = round($amount, 2);
 		$this->reference = $memo;
 		$this->date = $date;
+	}
+
+	function gl_item($code_id=null, $dimension_id=0, $dimension2_id=0, $amount=0, $memo='',
+		$act_descr=null, $person_id=null, $date=null)
+	{
+        self::__construct($code_id, $dimension_id, $dimension2_id, $amount, $memo, $act_descr, $person_id, $date);
 	}
 }

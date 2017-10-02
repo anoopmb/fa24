@@ -149,7 +149,7 @@ class graph
 	var $fontfile = "";
 	var $encoding;
 	
-    function graph()
+    function __construct()
     {
     	global $SysPrefs;
 		$this->encoding = strtoupper($_SESSION['language']->encoding);
@@ -169,6 +169,11 @@ class graph
         $this->total_parameters = 0;
         $this->sum_total        = 1;
 		$this->latin_notation   = false;
+    }
+
+    function graph()
+    {
+        self::__construct();
     }
 
 

@@ -43,9 +43,14 @@ class user_view {
 	var $dec;
 	var $name;
 
-	function user_view($name)
+	function __construct($name)
 	{
 		$this->name = $name;
+	}
+
+	function user_view($name)
+	{
+        self::__construct($name);
 	}
 
 	function error($msg, $context=null)
@@ -269,7 +274,7 @@ class simple_crud_view extends user_view {
 	var $display_both = false; //when set to true both list and editor are displayed all the time (eventually set in sub classes)
 	//
 	//
-	function simple_crud_view($name, $data_set = null, $options=array())
+	function __construct($name, $data_set = null, $options=array())
 	{
 		$this->user_view($name);
 
@@ -310,6 +315,11 @@ class simple_crud_view extends user_view {
 //		$this->_prev_status();
 	}
 
+	function simple_crud_view($name, $data_set = null, $options=array())
+	{
+        self::__construct($name, $data_set, $options);
+	}
+	
 	function _add_action($name, $handler, $but_value=null, $but_title=false, $but_icon=false, $aspect='', $view=null)
 	{
 		$this->pre_handlers[$name] = $handler;
@@ -596,10 +606,15 @@ class simple_crud_view extends user_view {
 
 class selector_crud_view extends simple_crud_view {
 
-	function selector_crud_view($name, $data_set = null, $options=array())
+	function __construct($name, $data_set = null, $options=array())
 	{
 		$this->display_both = true;
 		$this->simple_crud_view($name, $data_set, $options);
+	}
+
+	function selector_crud_view($name, $data_set = null, $options=array())
+	{
+        self::__construct($name, $data_set, $options);
 	}
 
 	function _check_mode()
@@ -650,11 +665,17 @@ class table_crud_view extends simple_crud_view {
 
 	var $title;
 
-	function table_crud_view($name, &$data_set = null, $options=array())
+	function __construct($name, &$data_set = null, $options=array())
 	{
 		$this->display_both = true;
 		$this->simple_crud_view($name, $data_set, $options);
 	}
+
+	function table_crud_view($name, &$data_set = null, $options=array())
+	{
+        self::__construct($name, $data_set, $options);
+	}
+
 	/**
 	*
 	*	Returns selector string from data or current selected_id

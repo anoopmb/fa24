@@ -25,7 +25,7 @@ class language
 	var $version; // lang package version
 	var $is_locale_file;
 	
-	function language($name, $code, $encoding, $dir = 'ltr') 
+	function __construct($name, $code, $encoding, $dir = 'ltr') 
 	{
 		global $dflt_lang;
 		
@@ -35,6 +35,11 @@ class language
 		$this->dir = $dir;
 	}
 
+	function language($name, $code, $encoding, $dir = 'ltr') 
+	{
+        self::__construct($name, $code, $encoding, $dir);
+	}
+	
 	function get_language_dir() 
 	{
 		return "lang/" . $this->code;

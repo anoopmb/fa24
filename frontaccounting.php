@@ -31,8 +31,12 @@ if (!isset($path_to_root) || isset($_GET['path_to_root']) || isset($_POST['path_
 
 		var $menu;
 
+		function __construct()
+		{
+		}
 		function front_accounting()
 		{
+	        self::__construct();
 		}
 		function add_application($app)
 		{	

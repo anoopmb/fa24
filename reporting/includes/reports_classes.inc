@@ -462,11 +462,16 @@ class Report
 	var $ar_params;
 	var $controls;
 	
-	function Report($id, $name, $ar_params = null)
+	function __construct($id, $name, $ar_params = null)
 	{
 		$this->id = $id;
 		$this->name = $name;
 		if ($ar_params) $this->set_controls($ar_params);
+	}
+	
+	function Report($id, $name, $ar_params = null)
+	{
+        self::__construct($id, $name, $ar_params);
 	}
 	
 	function set_controls($ar_params) {

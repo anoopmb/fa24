@@ -36,7 +36,7 @@ class current_user
 	var $prefs;
 	var $cur_con; // current db connection (can be different from $company for superuser)
 
-	function current_user()
+	function __construct()
 	{
 		global $def_coy;
 		
@@ -45,6 +45,11 @@ class current_user
 		$this->logged = false;
 
 		$this->prefs = new user_prefs();
+	}
+
+	function current_user()
+	{
+        self::__construct();
 	}
 
 	function logged_in()

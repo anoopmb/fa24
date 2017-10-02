@@ -41,7 +41,7 @@ class user_prefs
 	var $def_print_destination; // default print destination. 0 = PDF/Printer, 1 = Excel
 	var $def_print_orientation; // default print orientation. 0 = Portrait. 1 = Landscape
 
-	function user_prefs($user=null)
+	function __construct($user=null)
 	{
 		if ($user == null) { 
 			// set default values, used before login
@@ -102,6 +102,11 @@ class user_prefs
 			if (!file_exists("$path_to_root/themes/$this->theme"))
 				$this->theme = "default";
 		}
+	}
+	
+	function user_prefs($user=null)
+	{
+        self::__construct($user);
 	}
 	
 	function get_all()

@@ -24,10 +24,15 @@ define('MENU_SYSTEM', 'menu_system');
 		var $label;
 		var $link;
 		
-		function menu_item($label, $link) 
+		function __construct($label, $link) 
 		{
 			$this->label = $label;
 			$this->link = $link;
+		}
+
+		function menu_item($label, $link) 
+		{
+	        self::__construct($label, $link);
 		}
 	}
 
@@ -36,10 +41,15 @@ define('MENU_SYSTEM', 'menu_system');
 		var $title;
 		var $items;
 		
-		function menu($title) 
+		function __construct($title) 
 		{
 			$this->title = $title;
 			$this->items = array();
+		}
+		
+		function menu($title) 
+		{
+	        self::__construct($title);
 		}
 		
 		function add_item($label, $link) 
@@ -58,12 +68,17 @@ define('MENU_SYSTEM', 'menu_system');
 		var $access;
         var $category;
 		
-		function app_function($label,$link,$access='SA_OPEN',$category='')
+		function __construct($label,$link,$access='SA_OPEN',$category='')
 		{
 			$this->label = $label;
 			$this->link = $link;
 			$this->access = $access;
             $this->category = $category;
+		}
+
+		function app_function($label,$link,$access='SA_OPEN',$category='')
+		{
+	        self::__construct($label,$link,$access,$category);
 		}
 	}
 
@@ -74,12 +89,17 @@ define('MENU_SYSTEM', 'menu_system');
 		var $lappfunctions;
 		var $rappfunctions;
 		
-		function module($name,$icon = null) 
+		function __construct($name,$icon = null) 
 		{
 			$this->name = $name;
 			$this->icon = $icon;
 			$this->lappfunctions = array();
 			$this->rappfunctions = array();
+		}
+		
+		function module($name,$icon = null) 
+		{
+	        self::__construct($name,$icon);
 		}
 		
 		function add_lapp_function($label,$link="",$access='SA_OPEN',$category='')
@@ -107,12 +127,17 @@ define('MENU_SYSTEM', 'menu_system');
 		var $modules;
 		var $enabled;
 		
-		function application($id, $name, $enabled=true) 
+		function __construct($id, $name, $enabled=true) 
 		{
 			$this->id = $id;
 			$this->name = $name;
 			$this->enabled = $enabled;
 			$this->modules = array();
+		}
+		
+		function application($id, $name, $enabled=true) 
+		{
+	        self::__construct($id, $name, $enabled);
 		}
 		
 		function add_module($name, $icon = null) 

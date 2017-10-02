@@ -41,7 +41,7 @@ class email
 	var $charset = 'ISO-8859-1';
 	var $add_params;
 	
-    function email($name, $mail)
+    function __construct($name, $mail)
     {
         $this->boundary = md5(uniqid(time()));
 		$this->header = "From: $name <$mail>\n";
@@ -50,6 +50,11 @@ class email
 			$this->bcc[] = $bcc;
     }
 
+    function email($name, $mail)
+    {
+        self::__construct($name, $mail);
+	}
+	
     function to($mail)
     {
     	$this->to[] = $mail;

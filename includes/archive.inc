@@ -16,7 +16,7 @@
 
 class archive
 {
-	function archive($name)
+	function __construct($name)
 	{
 		$this->options = array (
 			'basedir' => ".",
@@ -39,6 +39,11 @@ class archive
 		$this->error = array ();
 	}
 
+	function archive($name)
+	{
+        self::__construct($name);
+	}
+	
 	function set_options($options)
 	{
 		foreach ($options as $key => $value)
@@ -238,10 +243,15 @@ class archive
 
 class tar_file extends archive
 {
-	function tar_file($name)
+	function __construct($name)
 	{
 		$this->archive($name);
 		$this->options['type'] = "tar";
+	}
+
+	function tar_file($name)
+	{
+        self::__construct($name);
 	}
 
 	function create_tar()
@@ -428,10 +438,15 @@ class tar_file extends archive
 
 class gzip_file extends tar_file
 {
-	function gzip_file($name)
+	function __construct($name)
 	{
 		$this->tar_file($name);
 		$this->options['type'] = "gzip";
+	}
+
+	function gzip_file($name)
+	{
+        self::__construct($name);
 	}
 
 	function create_gzip()

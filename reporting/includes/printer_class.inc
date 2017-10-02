@@ -14,7 +14,7 @@ class remote_printer {
    	//
 	//	Setting connection parameters
 	//
-    function remote_printer($queue, $host='', $port=515, $timeout=20){
+    function __construct($queue, $host='', $port=515, $timeout=20){
 		if ($host == '')
 			$host = $_SERVER['REMOTE_ADDR']; // default is user's host
         $this->host = $host;
@@ -22,6 +22,12 @@ class remote_printer {
         $this->timeout = $timeout;
         $this->queue = $queue;
     }
+
+    function remote_printer($queue, $host='', $port=515, $timeout=20)
+    {
+        self::__construct($queue, $host, $port, $timeout);
+	}
+
 	//
 	//	Send file to remote network printer.
 	// 

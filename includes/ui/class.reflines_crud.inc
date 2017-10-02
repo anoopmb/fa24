@@ -14,7 +14,7 @@ include_once $path_to_root.'/includes/ui/class.crud_view.inc';
 
 class fa_reflines extends simple_crud_view {
 
-	function fa_reflines()
+	function __construct()
 	{
 		$this->simple_crud_view('refs', new reflines_db(), array('clone' => false));
 
@@ -26,6 +26,11 @@ class fa_reflines extends simple_crud_view {
 			'default',
 		);
 
+	}
+
+	function fa_reflines()
+	{
+        self::__construct();
 	}
 
 	function list_view($Mode)

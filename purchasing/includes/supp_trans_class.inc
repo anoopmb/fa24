@@ -49,11 +49,16 @@ class supp_trans
 	var $dimension,
 		$dimension2;
 
-	function supp_trans($trans_type, $trans_no=0)
+	function __construct($trans_type, $trans_no=0)
 	{
 		$this->trans_type = $trans_type;
 		/*Constructor function initialises a new Supplier Transaction object */
 		$this->read($trans_type, $trans_no);
+	}
+
+	function supp_trans($trans_type, $trans_no=0)
+	{
+		self::__construct($trans_type, $trans_no);
 	}
 
 	function read($trans_type, $trans_no)
@@ -230,7 +235,7 @@ all the info to do the necessary entries without looking up ie additional querie
 	var $gl_code;
 	var $tax_included;
 
-	function grn_item ($id, $po_detail_item, $item_code, $item_description, $qty_recd, 
+	function __construct ($id, $po_detail_item, $item_code, $item_description, $qty_recd, 
 		$prev_quantity_inv, $this_quantity_inv, $order_price, $chg_price,
 		$std_cost_unit, $gl_code, $tax_included)
 	{
@@ -247,6 +252,15 @@ all the info to do the necessary entries without looking up ie additional querie
 		$this->std_cost_unit = $std_cost_unit;
 		$this->gl_code = $gl_code;
 		$this->tax_included = $tax_included;
+	}
+
+	function grn_item ($id, $po_detail_item, $item_code, $item_description, $qty_recd, 
+		$prev_quantity_inv, $this_quantity_inv, $order_price, $chg_price,
+		$std_cost_unit, $gl_code, $tax_included)
+	{
+		self::__construct($id, $po_detail_item, $item_code, $item_description, $qty_recd, 
+		$prev_quantity_inv, $this_quantity_inv, $order_price, $chg_price,
+		$std_cost_unit, $gl_code, $tax_included);
 	}
 
 	function full_charge_price($tax_group_id, $tax_group=null)
@@ -274,7 +288,7 @@ class gl_codes
 	var $amount;
 	var $memo_;
 
-	function gl_codes ($Counter, $gl_code, $gl_act_name, $gl_dim, $gl_dim2, $amount, $memo_)
+	function __construct ($Counter, $gl_code, $gl_act_name, $gl_dim, $gl_dim2, $amount, $memo_)
 	{
 
 	/* Constructor function to add a new gl_codes object with passed params */
@@ -285,6 +299,11 @@ class gl_codes
 		$this->gl_dim2 = $gl_dim2;
 		$this->amount = $amount;
 		$this->memo_= $memo_;
+	}
+
+	function gl_codes ($Counter, $gl_code, $gl_act_name, $gl_dim, $gl_dim2, $amount, $memo_)
+	{
+	    self::__construct($Counter, $gl_code, $gl_act_name, $gl_dim, $gl_dim2, $amount, $memo_);
 	}
 }
 

@@ -11,7 +11,7 @@
 ***********************************************************************/
 class assets_app extends application
 {
-	function assets_app()
+	function __construct()
 	{
 		$this->application("assets", _($this->help_context = "&Fixed Assets"));
 			
@@ -52,6 +52,11 @@ class assets_app extends application
 			"fixed_assets/fixed_asset_classes.php", 'SA_ASSETCLASS', MENU_MAINTENANCE);
 
 		$this->add_extensions();
+	}
+
+	function assets_app()
+	{
+        self::__construct();
 	}
 }
 

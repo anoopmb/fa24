@@ -11,7 +11,7 @@
 ***********************************************************************/
 class customers_app extends application 
 {
-	function customers_app() 
+	function __construct() 
 	{
 		$this->application("orders", _($this->help_context = "&Sales"));
 	
@@ -78,6 +78,11 @@ class customers_app extends application
 			"sales/manage/credit_status.php?", 'SA_CRSTATUS', MENU_MAINTENANCE);
 
 		$this->add_extensions();
+	}
+
+	function customers_app() 
+	{
+        self::__construct();
 	}
 }
 

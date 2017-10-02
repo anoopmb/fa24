@@ -11,7 +11,7 @@
 ***********************************************************************/
 class suppliers_app extends application 
 {
-	function suppliers_app() 
+	function __construct() 
 	{
 		$this->application("AP", _($this->help_context = "&Purchases"));
 
@@ -51,6 +51,11 @@ class suppliers_app extends application
 			"purchasing/manage/suppliers.php?", 'SA_SUPPLIER', MENU_ENTRY);
 
 		$this->add_extensions();
+	}
+
+	function suppliers_app() 
+	{
+        self::__construct();
 	}
 }
 

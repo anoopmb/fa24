@@ -17,7 +17,7 @@ include_once 'class.data_set.inc';
 **/
 
 class reflines_db extends data_set {
-	function reflines_db()
+	function __construct()
 	{
 		$this->set_validator('prefix:ui:_check_prefix', _("This prefix conflicts with another one already defined. Prefix have to be unambigous."));
 		$this->set_validator('prefix:ui:_check_template', _("Invalid template format."));
@@ -26,6 +26,11 @@ class reflines_db extends data_set {
 		$this->data_set('reflines', 
 			array('trans_type', 'prefix', 'description', 'default', 'pattern', 'id', 'inactive'), 
 			'id');
+	}
+
+	function reflines_db()
+	{
+        self::__construct();
 	}
 
 	/*

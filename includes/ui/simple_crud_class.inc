@@ -26,7 +26,7 @@ class simple_crud {
 	var $dec;
 	//
 	//
-	function simple_crud($name, $fields = null)
+	function __construct($name, $fields = null)
 	{
 		$this->name = $name;
 		$this->pre_handlers = array(
@@ -60,6 +60,12 @@ class simple_crud {
 		$this->fields = $fields;
 		$this->selected_id = $this->_none;
 	}
+
+	function simple_crud($name, $fields = null)
+	{
+        self::__construct($name, $fields);
+	}
+	
 	/*
 		Input/output formatters - convert values between php/user domains.
 	*/

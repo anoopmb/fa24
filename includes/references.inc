@@ -70,9 +70,14 @@ class references
 {
 	var $reflines;
 	
-	function references()
+	function __construct()
 	{
 		$this->reflines = new reflines_db();
+	}
+
+	function references()
+	{
+        self::__construct();
 	}
 
 	function _legacy_line($refline)

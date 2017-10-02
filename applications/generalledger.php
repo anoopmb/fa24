@@ -11,7 +11,7 @@
 ***********************************************************************/
 class general_ledger_app extends application
 {
-	function general_ledger_app()
+	function __construct()
 	{
 		$this->application("GL", _($this->help_context = "&Banking and General Ledger"));
 
@@ -77,6 +77,11 @@ class general_ledger_app extends application
 			"gl/manage/revaluate_currencies.php?", 'SA_EXCHANGERATE', MENU_MAINTENANCE);
 
 		$this->add_extensions();
+	}
+
+	function general_ledger_app()
+	{
+        self::__construct();
 	}
 }
 

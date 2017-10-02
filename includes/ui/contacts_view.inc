@@ -21,7 +21,7 @@ class contacts extends simple_crud {
 	var $sub_class;
 	var $class;
 	
-	function contacts($name, $id, $class, $subclass=null) {
+	function __construct($name, $id, $class, $subclass=null) {
 		$fields = array('ref','name','name2','address', 'phone', 'phone2','fax',
 			'email','lang','notes', 'assgn' =>array('fld'=>'contacts'));
 
@@ -29,6 +29,10 @@ class contacts extends simple_crud {
 		$this->class = $class;
 		$this->subclass = $subclass;
 		$this->entity = $id;
+	}
+
+	function contacts($name, $id, $class, $subclass=null) {
+        self::__construct($name, $id, $class, $subclass);
 	}
 
 	function list_view() {

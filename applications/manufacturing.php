@@ -11,7 +11,7 @@
 ***********************************************************************/
 class manufacturing_app extends application
 {
-	function manufacturing_app()
+	function __construct()
 	{
 		$this->application("manuf", _($this->help_context = "&Manufacturing"));
 
@@ -38,6 +38,11 @@ class manufacturing_app extends application
 			"manufacturing/manage/work_centres.php?", 'SA_WORKCENTRES', MENU_MAINTENANCE);
 
 		$this->add_extensions();
+	}
+
+	function manufacturing_app()
+	{
+        self::__construct();
 	}
 }
 
