@@ -1,0 +1,1828 @@
+From 3e7d2ed1d60d63b3f85654258fd07312d2e31855 Mon Sep 17 00:00:00 2001
+From: PaulShipley <pshipley@melbpc.org.au>
+Date: Mon, 2 Oct 2017 18:53:10 +1100
+Subject: [PATCH 1/1] Installation issues with XAMPP 3.2.2 (Apache 2.4.25, PHP
+ 7.1.4, MariaDB 10.1.22)
+
+---
+ admin/includes/fa_patch.class.inc                  |  7 +-
+ applications/application.php                       | 35 ++++++++--
+ applications/customers.php                         |  7 +-
+ applications/dimensions.php                        |  7 +-
+ applications/fixed_assets.php                      |  7 +-
+ applications/generalledger.php                     |  7 +-
+ applications/inventory.php                         |  7 +-
+ applications/manufacturing.php                     |  7 +-
+ applications/setup.php                             |  7 +-
+ applications/suppliers.php                         |  7 +-
+ frontaccounting.php                                |  4 ++
+ includes/JsHttpRequest.php                         |  8 ++-
+ includes/ajax.inc                                  |  8 ++-
+ includes/archive.inc                               | 21 +++++-
+ includes/current_user.inc                          |  7 +-
+ includes/db/class.data_set.inc                     | 21 +++++-
+ includes/db/class.reflines_db.inc                  |  7 +-
+ includes/db_pager.inc                              |  8 ++-
+ includes/lang/language.inc                         |  7 +-
+ includes/packages.inc                              |  8 ++-
+ includes/prefs/sysprefs.inc                        |  7 +-
+ includes/prefs/userprefs.inc                       |  7 +-
+ includes/references.inc                            |  7 +-
+ includes/ui/allocation_cart.inc                    | 16 ++++-
+ includes/ui/class.crud_view.inc                    | 29 +++++++--
+ includes/ui/class.reflines_crud.inc                |  7 +-
+ includes/ui/contacts_view.inc                      |  6 +-
+ includes/ui/items_cart.inc                         | 22 ++++++-
+ includes/ui/simple_crud_class.inc                  |  8 ++-
+ purchasing/includes/po_class.inc                   |  7 +-
+ purchasing/includes/supp_trans_class.inc           | 25 +++++++-
+ reporting/includes/Workbook.php                    | 75 +++++++++++++++++++---
+ reporting/includes/barcodes.php                    |  6 +-
+ reporting/includes/class.graphic.inc               |  7 +-
+ reporting/includes/class.mail.inc                  |  7 +-
+ reporting/includes/class.pdf.inc                   |  8 ++-
+ reporting/includes/excel_report.inc                |  6 +-
+ reporting/includes/fpdi/decoders/ASCII85Decode.php |  6 +-
+ reporting/includes/fpdi/decoders/LZWDecode.php     |  6 +-
+ reporting/includes/fpdi/fpdi_pdf_parser.php        |  6 +-
+ reporting/includes/fpdi/pdf_context.php            |  6 +-
+ reporting/includes/fpdi/pdf_parser.php             |  6 +-
+ reporting/includes/pdf_report.inc                  |  6 +-
+ reporting/includes/printer_class.inc               |  8 ++-
+ reporting/includes/reports_classes.inc             |  7 +-
+ reporting/includes/tcpdf.php                       |  6 +-
+ sales/includes/cart_class.inc                      | 15 ++++-
+ sql/alter2.1.php                                   |  7 +-
+ sql/alter2.2.php                                   |  6 +-
+ sql/alter2.3.php                                   |  6 +-
+ sql/alter2.4.php                                   |  6 +-
+ sql/alter2.4rc1.php                                |  6 +-
+ 52 files changed, 473 insertions(+), 77 deletions(-)
+
+diff --git a/admin/includes/fa_patch.class.inc b/admin/includes/fa_patch.class.inc
+index 91e13f1a..34bb696c 100644
+--- a/admin/includes/fa_patch.class.inc
++++ b/admin/includes/fa_patch.class.inc
+@@ -26,7 +26,7 @@ class fa_patch {
+ 	var $errors = array();
+ 	var	$max_upgrade_time = 300;
+ 
+-	function fa_patch()
++	function __construct()
+ 	{
+ 		global $path_to_root;
+ 
+@@ -37,6 +37,11 @@ function fa_patch()
+ 		return $this->companies;
+ 	}
+ 
++	function fa_patch()
++	{
++        self::__construct();
++	}
++
+ 	/*
+ 		Collect/log messages generated during upgrade process.
+ 	*/
+diff --git a/applications/application.php b/applications/application.php
+index 81bf2e10..4bc00de0 100644
+--- a/applications/application.php
++++ b/applications/application.php
+@@ -24,11 +24,16 @@ class menu_item
+ 		var $label;
+ 		var $link;
+ 		
+-		function menu_item($label, $link) 
++		function __construct($label, $link) 
+ 		{
+ 			$this->label = $label;
+ 			$this->link = $link;
+ 		}
++
++		function menu_item($label, $link) 
++		{
++	        self::__construct($label, $link);
++		}
+ 	}
+ 
+ 	class menu 
+@@ -36,12 +41,17 @@ class menu
+ 		var $title;
+ 		var $items;
+ 		
+-		function menu($title) 
++		function __construct($title) 
+ 		{
+ 			$this->title = $title;
+ 			$this->items = array();
+ 		}
+ 		
++		function menu($title) 
++		{
++	        self::__construct($title);
++		}
++		
+ 		function add_item($label, $link) 
+ 		{
+ 			$item = new menu_item($label,$link);
+@@ -58,13 +68,18 @@ class app_function
+ 		var $access;
+         var $category;
+ 		
+-		function app_function($label,$link,$access='SA_OPEN',$category='')
++		function __construct($label,$link,$access='SA_OPEN',$category='')
+ 		{
+ 			$this->label = $label;
+ 			$this->link = $link;
+ 			$this->access = $access;
+             $this->category = $category;
+ 		}
++
++		function app_function($label,$link,$access='SA_OPEN',$category='')
++		{
++	        self::__construct($label,$link,$access,$category);
++		}
+ 	}
+ 
+ 	class module 
+@@ -74,7 +89,7 @@ class module
+ 		var $lappfunctions;
+ 		var $rappfunctions;
+ 		
+-		function module($name,$icon = null) 
++		function __construct($name,$icon = null) 
+ 		{
+ 			$this->name = $name;
+ 			$this->icon = $icon;
+@@ -82,6 +97,11 @@ function module($name,$icon = null)
+ 			$this->rappfunctions = array();
+ 		}
+ 		
++		function module($name,$icon = null) 
++		{
++	        self::__construct($name,$icon);
++		}
++		
+ 		function add_lapp_function($label,$link="",$access='SA_OPEN',$category='')
+ 		{
+ 			$appfunction = new app_function($label,$link,$access,$category);
+@@ -107,7 +127,7 @@ class application
+ 		var $modules;
+ 		var $enabled;
+ 		
+-		function application($id, $name, $enabled=true) 
++		function __construct($id, $name, $enabled=true) 
+ 		{
+ 			$this->id = $id;
+ 			$this->name = $name;
+@@ -115,6 +135,11 @@ function application($id, $name, $enabled=true)
+ 			$this->modules = array();
+ 		}
+ 		
++		function application($id, $name, $enabled=true) 
++		{
++	        self::__construct($id, $name, $enabled);
++		}
++		
+ 		function add_module($name, $icon = null) 
+ 		{
+ 			$module = new module($name,$icon);
+diff --git a/applications/customers.php b/applications/customers.php
+index 0e6a2c90..edc03278 100644
+--- a/applications/customers.php
++++ b/applications/customers.php
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ class customers_app extends application 
+ {
+-	function customers_app() 
++	function __construct() 
+ 	{
+ 		$this->application("orders", _($this->help_context = "&Sales"));
+ 	
+@@ -79,6 +79,11 @@ function customers_app()
+ 
+ 		$this->add_extensions();
+ 	}
++
++	function customers_app() 
++	{
++        self::__construct();
++	}
+ }
+ 
+ 
+diff --git a/applications/dimensions.php b/applications/dimensions.php
+index 52fb9f7e..acb6e8a0 100644
+--- a/applications/dimensions.php
++++ b/applications/dimensions.php
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ class dimensions_app extends application
+ {
+-	function dimensions_app()
++	function __construct()
+ 	{
+ 		$dim = get_company_pref('use_dimension');
+ 		$this->application("proj", _($this->help_context = "&Dimensions"), $dim);
+@@ -38,5 +38,10 @@ function dimensions_app()
+ 			$this->add_extensions();
+ 		}
+ 	}
++
++	function dimensions_app()
++	{
++        self::__construct();
++	}
+ }
+ 
+diff --git a/applications/fixed_assets.php b/applications/fixed_assets.php
+index 3967c06a..61554e94 100644
+--- a/applications/fixed_assets.php
++++ b/applications/fixed_assets.php
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ class assets_app extends application
+ {
+-	function assets_app()
++	function __construct()
+ 	{
+ 		$this->application("assets", _($this->help_context = "&Fixed Assets"));
+ 			
+@@ -53,6 +53,11 @@ function assets_app()
+ 
+ 		$this->add_extensions();
+ 	}
++
++	function assets_app()
++	{
++        self::__construct();
++	}
+ }
+ 
+ 
+diff --git a/applications/generalledger.php b/applications/generalledger.php
+index 21d48b35..94e139ba 100644
+--- a/applications/generalledger.php
++++ b/applications/generalledger.php
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ class general_ledger_app extends application
+ {
+-	function general_ledger_app()
++	function __construct()
+ 	{
+ 		$this->application("GL", _($this->help_context = "&Banking and General Ledger"));
+ 
+@@ -78,6 +78,11 @@ function general_ledger_app()
+ 
+ 		$this->add_extensions();
+ 	}
++
++	function general_ledger_app()
++	{
++        self::__construct();
++	}
+ }
+ 
+ 
+diff --git a/applications/inventory.php b/applications/inventory.php
+index 965109b6..0f4733fb 100644
+--- a/applications/inventory.php
++++ b/applications/inventory.php
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ class inventory_app extends application
+ {
+-	function inventory_app()
++	function __construct()
+ 	{
+ 		$this->application("stock", _($this->help_context = "&Items and Inventory"));
+ 
+@@ -55,6 +55,11 @@ function inventory_app()
+ 
+ 		$this->add_extensions();
+ 	}
++
++	function inventory_app()
++	{
++        self::__construct();
++	}
+ }
+ 
+ 
+diff --git a/applications/manufacturing.php b/applications/manufacturing.php
+index 9a7c393b..12076afd 100644
+--- a/applications/manufacturing.php
++++ b/applications/manufacturing.php
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ class manufacturing_app extends application
+ {
+-	function manufacturing_app()
++	function __construct()
+ 	{
+ 		$this->application("manuf", _($this->help_context = "&Manufacturing"));
+ 
+@@ -39,6 +39,11 @@ function manufacturing_app()
+ 
+ 		$this->add_extensions();
+ 	}
++
++	function manufacturing_app()
++	{
++        self::__construct();
++	}
+ }
+ 
+ 
+diff --git a/applications/setup.php b/applications/setup.php
+index 99fa48d5..2ec88b34 100644
+--- a/applications/setup.php
++++ b/applications/setup.php
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ class setup_app extends application
+ {
+-	function setup_app()
++	function __construct()
+ 	{
+ 		$this->application("system", _($this->help_context = "S&etup"));
+ 
+@@ -78,6 +78,11 @@ function setup_app()
+ 
+ 		$this->add_extensions();
+ 	}
++
++	function setup_app()
++	{
++        self::__construct();
++	}
+ }
+ 
+ 
+diff --git a/applications/suppliers.php b/applications/suppliers.php
+index 56b70219..d4069fee 100644
+--- a/applications/suppliers.php
++++ b/applications/suppliers.php
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ class suppliers_app extends application 
+ {
+-	function suppliers_app() 
++	function __construct() 
+ 	{
+ 		$this->application("AP", _($this->help_context = "&Purchases"));
+ 
+@@ -52,6 +52,11 @@ function suppliers_app()
+ 
+ 		$this->add_extensions();
+ 	}
++
++	function suppliers_app() 
++	{
++        self::__construct();
++	}
+ }
+ 
+ 
+diff --git a/frontaccounting.php b/frontaccounting.php
+index ec21ddb9..6b1a7faf 100644
+--- a/frontaccounting.php
++++ b/frontaccounting.php
+@@ -31,8 +31,12 @@ class front_accounting
+ 
+ 		var $menu;
+ 
++		function __construct()
++		{
++		}
+ 		function front_accounting()
+ 		{
++	        self::__construct();
+ 		}
+ 		function add_application($app)
+ 		{	
+diff --git a/includes/JsHttpRequest.php b/includes/JsHttpRequest.php
+index f71c0ed2..8bc26355 100644
+--- a/includes/JsHttpRequest.php
++++ b/includes/JsHttpRequest.php
+@@ -63,7 +63,7 @@ class JsHttpRequest
+      * If an object is created WITHOUT an active AJAX query, it is simply marked as
+      * non-active. Use statuc method isActive() to check.
+      */
+-    function JsHttpRequest($enc)
++    function __construct($enc)
+     {
+         global $JsHttpRequest_Active;
+         
+@@ -124,7 +124,11 @@ function JsHttpRequest($enc)
+             $JsHttpRequest_Active = false;
+         }
+     }
+-    
++
++    function JsHttpRequest($enc)
++    {
++        self::__construct($enc);
++	}    
+ 
+     /**
+      * Static function.
+diff --git a/includes/ajax.inc b/includes/ajax.inc
+index 220c0084..27793406 100644
+--- a/includes/ajax.inc
++++ b/includes/ajax.inc
+@@ -16,10 +16,16 @@ class Ajax extends JsHttpRequest {
+ 	var $aCommands = array();
+ 	var $triggers = array();
+ 	
+-    function Ajax() 
++    function __construct() 
+     {
+ 	  $this->JsHttpRequest(@$_SESSION['language']->encoding);
+     }
++
++    function Ajax() 
++    {
++        self::__construct();
++    }
++
+ 	//
+ 	//	This function is used in ctrl routines to activate
+ 	//	update of ajaxified html element selected by given name/id.
+diff --git a/includes/archive.inc b/includes/archive.inc
+index 413e3308..305eafcd 100644
+--- a/includes/archive.inc
++++ b/includes/archive.inc
+@@ -16,7 +16,7 @@
+ 
+ class archive
+ {
+-	function archive($name)
++	function __construct($name)
+ 	{
+ 		$this->options = array (
+ 			'basedir' => ".",
+@@ -39,6 +39,11 @@ function archive($name)
+ 		$this->error = array ();
+ 	}
+ 
++	function archive($name)
++	{
++        self::__construct($name);
++	}
++	
+ 	function set_options($options)
+ 	{
+ 		foreach ($options as $key => $value)
+@@ -238,12 +243,17 @@ function parse_dir($dirname)
+ 
+ class tar_file extends archive
+ {
+-	function tar_file($name)
++	function __construct($name)
+ 	{
+ 		$this->archive($name);
+ 		$this->options['type'] = "tar";
+ 	}
+ 
++	function tar_file($name)
++	{
++        self::__construct($name);
++	}
++
+ 	function create_tar()
+ 	{
+ 		$pwd = getcwd();
+@@ -428,12 +438,17 @@ function open_archive()
+ 
+ class gzip_file extends tar_file
+ {
+-	function gzip_file($name)
++	function __construct($name)
+ 	{
+ 		$this->tar_file($name);
+ 		$this->options['type'] = "gzip";
+ 	}
+ 
++	function gzip_file($name)
++	{
++        self::__construct($name);
++	}
++
+ 	function create_gzip()
+ 	{
+ 		if ($this->options['inmemory'] == 0)
+diff --git a/includes/current_user.inc b/includes/current_user.inc
+index 239324c6..d4534967 100644
+--- a/includes/current_user.inc
++++ b/includes/current_user.inc
+@@ -36,7 +36,7 @@ class current_user
+ 	var $prefs;
+ 	var $cur_con; // current db connection (can be different from $company for superuser)
+ 
+-	function current_user()
++	function __construct()
+ 	{
+ 		global $def_coy;
+ 		
+@@ -47,6 +47,11 @@ function current_user()
+ 		$this->prefs = new user_prefs();
+ 	}
+ 
++	function current_user()
++	{
++        self::__construct();
++	}
++
+ 	function logged_in()
+ 	{
+ 		return $this->logged;
+diff --git a/includes/db/class.data_set.inc b/includes/db/class.data_set.inc
+index f536e13c..710fa0b7 100644
+--- a/includes/db/class.data_set.inc
++++ b/includes/db/class.data_set.inc
+@@ -37,7 +37,7 @@ function __wakeup()
+ 		$this->errors = array();
+ 	}
+ 
+-	function record_set($name, $fields, $key, $subset=null)
++	function __construct($name, $fields, $key, $subset=null)
+ 	{
+ 		$this->name = $name;
+ 		$this->fields = $fields;
+@@ -45,6 +45,11 @@ function record_set($name, $fields, $key, $subset=null)
+ 		$this->subset = $subset;
+ 	}
+ 
++	function record_set($name, $fields, $key, $subset=null)
++	{
++        self::__construct($name, $fields, $key, $subset);
++	}
++
+ 	function error($msg, $field=null) {
+ 		global $db;
+ 
+@@ -253,11 +258,16 @@ function insert($data)
+ 
+ class data_set extends record_set {
+ 
+-	function data_set($name, $fields, $key, $subset=null)
++	function __construct($name, $fields, $key, $subset=null)
+ 	{
+ 		$this->record_set($name, $fields, $key, $subset);
+ 	}
+ 
++	function data_set($name, $fields, $key, $subset=null)
++	{
++        self::__construct($name, $fields, $key, $subset);
++	}
++
+ 	//
+ 	//	Generic read record routine
+ 	//
+@@ -417,13 +427,18 @@ class array_set extends record_set {
+ 
+ 	var $object_class;	// name of record object class or null for arrays
+ 
+-	function array_set($name, $fields, $key=null, &$arr=array(), $class = null)
++	function __construct($name, $fields, $key=null, &$arr=array(), $class = null)
+ 	{
+ 		$this->array = &$arr;
+ 		$this->object_class = $class;
+ 		$this->record_set($name, $fields, $key);
+ 	}
+ 
++	function array_set($name, $fields, $key=null, &$arr=array(), $class = null)
++	{
++        self::__construct($name, $fields, $key, $arr, $class);
++	}
++
+ 	//===========================================================================
+ 	//	Database functions placeholders
+ 
+diff --git a/includes/db/class.reflines_db.inc b/includes/db/class.reflines_db.inc
+index 47976504..3fbde695 100644
+--- a/includes/db/class.reflines_db.inc
++++ b/includes/db/class.reflines_db.inc
+@@ -17,7 +17,7 @@
+ **/
+ 
+ class reflines_db extends data_set {
+-	function reflines_db()
++	function __construct()
+ 	{
+ 		$this->set_validator('prefix:ui:_check_prefix', _("This prefix conflicts with another one already defined. Prefix have to be unambigous."));
+ 		$this->set_validator('prefix:ui:_check_template', _("Invalid template format."));
+@@ -28,6 +28,11 @@ function reflines_db()
+ 			'id');
+ 	}
+ 
++	function reflines_db()
++	{
++        self::__construct();
++	}
++
+ 	/*
+ 		Prefix cannot be ambigous.
+ 	*/
+diff --git a/includes/db_pager.inc b/includes/db_pager.inc
+index 416773ac..15a143e0 100644
+--- a/includes/db_pager.inc
++++ b/includes/db_pager.inc
+@@ -65,7 +65,7 @@ class db_pager {
+ 	//  	array('select' => 'SUM(quantity)', 'from' => TB_PREF."stock_moves", 'group' => 'location')
+ 	//
+ 	//	$name is base name for pager controls
+-	function db_pager($sql, $name, $table = null, $page_len=0) 
++	function __construct($sql, $name, $table = null, $page_len=0) 
+ 	{
+ 		$this->width = "95%";
+ 		if ($page_len == 0) $page_len = user_query_size();
+@@ -73,6 +73,12 @@ function db_pager($sql, $name, $table = null, $page_len=0)
+ 		$this->page_len = $page_len;
+ 	 	$this->set_sql($sql);
+ 	}
++
++	function db_pager($sql, $name, $table = null, $page_len=0) 
++	{
++        self::__construct($sql, $name, $table, $page_len);
++	}
++	
+ 	//
+ 	//	Parse base sql select query	or use an associative array.
+ 	//
+diff --git a/includes/lang/language.inc b/includes/lang/language.inc
+index 1609cdc5..8d4ff367 100644
+--- a/includes/lang/language.inc
++++ b/includes/lang/language.inc
+@@ -25,7 +25,7 @@ class language
+ 	var $version; // lang package version
+ 	var $is_locale_file;
+ 	
+-	function language($name, $code, $encoding, $dir = 'ltr') 
++	function __construct($name, $code, $encoding, $dir = 'ltr') 
+ 	{
+ 		global $dflt_lang;
+ 		
+@@ -35,6 +35,11 @@ function language($name, $code, $encoding, $dir = 'ltr')
+ 		$this->dir = $dir;
+ 	}
+ 
++	function language($name, $code, $encoding, $dir = 'ltr') 
++	{
++        self::__construct($name, $code, $encoding, $dir);
++	}
++	
+ 	function get_language_dir() 
+ 	{
+ 		return "lang/" . $this->code;
+diff --git a/includes/packages.inc b/includes/packages.inc
+index 2e1b92e3..bb548739 100644
+--- a/includes/packages.inc
++++ b/includes/packages.inc
+@@ -19,7 +19,7 @@
+ // FrontAccounting package class
+ //
+ class package extends gzip_file {
+-	function package($filename, $basedir=null)
++	function __construct($filename, $basedir=null)
+ 	{
+ 		global $path_to_root;
+ 
+@@ -34,6 +34,12 @@ function package($filename, $basedir=null)
+ 		$this->set_options(array('basedir'=> $basedir));
+ 		$this->options['type'] = "pkg";
+ 	}
++
++	function package($filename, $basedir=null)
++	{
++        self::__construct($filename, $basedir);
++	}
++
+ 	//
+ 	//	Used by archive class. Use create_archive() instead.
+ 	//	
+diff --git a/includes/prefs/sysprefs.inc b/includes/prefs/sysprefs.inc
+index cce4769c..e6c72085 100644
+--- a/includes/prefs/sysprefs.inc
++++ b/includes/prefs/sysprefs.inc
+@@ -21,7 +21,7 @@ class sys_prefs
+ 	var $prefs;
+ 	var $db_ok; // check whether database has been upgraded after src update.
+ 
+-	function sys_prefs()
++	function __construct()
+ 	{
+ 		global $path_to_root;
+ 
+@@ -45,6 +45,11 @@ function sys_prefs()
+    	    ini_set('date.timezone', $this->time_zone);
+ 	}
+ 
++	function sys_prefs()
++	{
++        self::__construct();
++	}
++	
+ 	/*
+ 		Re-initialize company preferrencies.
+ 	*/
+diff --git a/includes/prefs/userprefs.inc b/includes/prefs/userprefs.inc
+index 0f368477..03ff8a73 100644
+--- a/includes/prefs/userprefs.inc
++++ b/includes/prefs/userprefs.inc
+@@ -41,7 +41,7 @@ class user_prefs
+ 	var $def_print_destination; // default print destination. 0 = PDF/Printer, 1 = Excel
+ 	var $def_print_orientation; // default print orientation. 0 = Portrait. 1 = Landscape
+ 
+-	function user_prefs($user=null)
++	function __construct($user=null)
+ 	{
+ 		if ($user == null) { 
+ 			// set default values, used before login
+@@ -104,6 +104,11 @@ function user_prefs($user=null)
+ 		}
+ 	}
+ 	
++	function user_prefs($user=null)
++	{
++        self::__construct($user);
++	}
++	
+ 	function get_all()
+ 	{
+ 			return array(
+diff --git a/includes/references.inc b/includes/references.inc
+index ff65fa38..6e23fc61 100644
+--- a/includes/references.inc
++++ b/includes/references.inc
+@@ -70,11 +70,16 @@ class references
+ {
+ 	var $reflines;
+ 	
+-	function references()
++	function __construct()
+ 	{
+ 		$this->reflines = new reflines_db();
+ 	}
+ 
++	function references()
++	{
++        self::__construct();
++	}
++
+ 	function _legacy_line($refline)
+ 	{
+ 		return strpbrk($refline['pattern'], '{}') == false;
+diff --git a/includes/ui/allocation_cart.inc b/includes/ui/allocation_cart.inc
+index f51046b0..0bfd2274 100644
+--- a/includes/ui/allocation_cart.inc
++++ b/includes/ui/allocation_cart.inc
+@@ -30,7 +30,7 @@ class allocation
+ 
+ 	var $allocs; /*array of transactions allocated to */
+ 
+-	function allocation($type, $trans_no, $person_id = null, $person_type_id=null)
++	function __construct($type, $trans_no, $person_id = null, $person_type_id=null)
+ 	{
+ 		$this->allocs = array();
+ 		
+@@ -42,6 +42,11 @@ function allocation($type, $trans_no, $person_id = null, $person_type_id=null)
+ 		$this->read($type, $trans_no, $person_id, $person_type_id); // read payment or credit
+ 	}
+ 
++	function allocation($type, $trans_no, $person_id = null, $person_type_id=null)
++	{
++        self::__construct($type, $trans_no, $person_id, $person_type_id);
++	}
++	
+ 	function set_person($person_id, $person_type)
+ 	{
+ 		$this->person_id = $person_id;
+@@ -254,7 +259,7 @@ class allocation_item
+ 	
+ 	var $current_allocated;
+ 	
+-	function allocation_item ($type, $type_no, $date_, $due_date, $amount, 
++	function __construct ($type, $type_no, $date_, $due_date, $amount, 
+ 		$amount_allocated, $current_allocated, $ref)
+ 	{
+ 
+@@ -270,6 +275,13 @@ function allocation_item ($type, $type_no, $date_, $due_date, $amount,
+ 		$this->amount_allocated = $amount_allocated;
+ 		$this->current_allocated = $current_allocated;
+ 	}
++
++	function allocation_item ($type, $type_no, $date_, $due_date, $amount, 
++		$amount_allocated, $current_allocated, $ref)
++	{
++        self::__construct($type, $type_no, $date_, $due_date, $amount, 
++		$amount_allocated, $current_allocated, $ref);
++	}
+ }
+ 
+ //--------------------------------------------------------------------------------
+diff --git a/includes/ui/class.crud_view.inc b/includes/ui/class.crud_view.inc
+index 8572fdbe..68504964 100644
+--- a/includes/ui/class.crud_view.inc
++++ b/includes/ui/class.crud_view.inc
+@@ -43,11 +43,16 @@ class user_view {
+ 	var $dec;
+ 	var $name;
+ 
+-	function user_view($name)
++	function __construct($name)
+ 	{
+ 		$this->name = $name;
+ 	}
+ 
++	function user_view($name)
++	{
++        self::__construct($name);
++	}
++
+ 	function error($msg, $context=null)
+ 	{
+ 		// save error message
+@@ -269,7 +274,7 @@ class simple_crud_view extends user_view {
+ 	var $display_both = false; //when set to true both list and editor are displayed all the time (eventually set in sub classes)
+ 	//
+ 	//
+-	function simple_crud_view($name, $data_set = null, $options=array())
++	function __construct($name, $data_set = null, $options=array())
+ 	{
+ 		$this->user_view($name);
+ 
+@@ -310,6 +315,11 @@ function simple_crud_view($name, $data_set = null, $options=array())
+ //		$this->_prev_status();
+ 	}
+ 
++	function simple_crud_view($name, $data_set = null, $options=array())
++	{
++        self::__construct($name, $data_set, $options);
++	}
++	
+ 	function _add_action($name, $handler, $but_value=null, $but_title=false, $but_icon=false, $aspect='', $view=null)
+ 	{
+ 		$this->pre_handlers[$name] = $handler;
+@@ -596,12 +606,17 @@ function editor_view($Mode) {
+ 
+ class selector_crud_view extends simple_crud_view {
+ 
+-	function selector_crud_view($name, $data_set = null, $options=array())
++	function __construct($name, $data_set = null, $options=array())
+ 	{
+ 		$this->display_both = true;
+ 		$this->simple_crud_view($name, $data_set, $options);
+ 	}
+ 
++	function selector_crud_view($name, $data_set = null, $options=array())
++	{
++        self::__construct($name, $data_set, $options);
++	}
++
+ 	function _check_mode()
+ 	{
+ 		global $Ajax;
+@@ -650,11 +665,17 @@ class table_crud_view extends simple_crud_view {
+ 
+ 	var $title;
+ 
+-	function table_crud_view($name, &$data_set = null, $options=array())
++	function __construct($name, &$data_set = null, $options=array())
+ 	{
+ 		$this->display_both = true;
+ 		$this->simple_crud_view($name, $data_set, $options);
+ 	}
++
++	function table_crud_view($name, &$data_set = null, $options=array())
++	{
++        self::__construct($name, $data_set, $options);
++	}
++
+ 	/**
+ 	*
+ 	*	Returns selector string from data or current selected_id
+diff --git a/includes/ui/class.reflines_crud.inc b/includes/ui/class.reflines_crud.inc
+index 70403f62..2786b54a 100644
+--- a/includes/ui/class.reflines_crud.inc
++++ b/includes/ui/class.reflines_crud.inc
+@@ -14,7 +14,7 @@
+ 
+ class fa_reflines extends simple_crud_view {
+ 
+-	function fa_reflines()
++	function __construct()
+ 	{
+ 		$this->simple_crud_view('refs', new reflines_db(), array('clone' => false));
+ 
+@@ -28,6 +28,11 @@ function fa_reflines()
+ 
+ 	}
+ 
++	function fa_reflines()
++	{
++        self::__construct();
++	}
++
+ 	function list_view($Mode)
+ 	{
+ 		global $systypes_array;
+diff --git a/includes/ui/contacts_view.inc b/includes/ui/contacts_view.inc
+index d27b8faa..f10f953f 100644
+--- a/includes/ui/contacts_view.inc
++++ b/includes/ui/contacts_view.inc
+@@ -21,7 +21,7 @@ class contacts extends simple_crud {
+ 	var $sub_class;
+ 	var $class;
+ 	
+-	function contacts($name, $id, $class, $subclass=null) {
++	function __construct($name, $id, $class, $subclass=null) {
+ 		$fields = array('ref','name','name2','address', 'phone', 'phone2','fax',
+ 			'email','lang','notes', 'assgn' =>array('fld'=>'contacts'));
+ 
+@@ -31,6 +31,10 @@ function contacts($name, $id, $class, $subclass=null) {
+ 		$this->entity = $id;
+ 	}
+ 
++	function contacts($name, $id, $class, $subclass=null) {
++        self::__construct($name, $id, $class, $subclass);
++	}
++
+ 	function list_view() {
+ 		br();
+ 
+diff --git a/includes/ui/items_cart.inc b/includes/ui/items_cart.inc
+index 7a19d235..c8545038 100644
+--- a/includes/ui/items_cart.inc
++++ b/includes/ui/items_cart.inc
+@@ -40,7 +40,7 @@ class items_cart
+ 
+ 	var $fixed_asset;
+ 
+-	function items_cart($type, $trans_no=0)
++	function __construct($type, $trans_no=0)
+ 	{
+ 		$this->trans_type = $type;
+ 		$this->order_id = $trans_no;
+@@ -50,6 +50,11 @@ function items_cart($type, $trans_no=0)
+ 		$this->rate = 1;
+ 	}
+ 
++	function items_cart($type, $trans_no=0)
++	{
++        self::__construct($type, $trans_no);
++	}
++
+ 	// --------------- line item functions
+ 
+ 	function add_to_cart($line_no, $stock_id, $qty, $standard_cost, $description=null)
+@@ -465,7 +470,7 @@ class line_item
+ 	var $price;
+ 	var $standard_cost;
+ 
+-	function line_item ($stock_id, $qty, $standard_cost=null, $description=null)
++	function __construct ($stock_id, $qty, $standard_cost=null, $description=null)
+ 	{
+ 		$item_row = get_item($stock_id);
+ 
+@@ -490,6 +495,11 @@ function line_item ($stock_id, $qty, $standard_cost=null, $description=null)
+ 		//$this->price = $price;
+ 		$this->price = 0;
+ 	}
++
++	function line_item ($stock_id, $qty, $standard_cost=null, $description=null)
++	{
++        self::__construct($stock_id, $qty, $standard_cost, $description);
++	}
+ }
+ 
+ //---------------------------------------------------------------------------------------
+@@ -509,7 +519,7 @@ class gl_item
+ 	var $branch_id;
+ 	var $date;
+ 
+-	function gl_item($code_id=null, $dimension_id=0, $dimension2_id=0, $amount=0, $memo='',
++	function __construct($code_id=null, $dimension_id=0, $dimension2_id=0, $amount=0, $memo='',
+ 		$act_descr=null, $person_id=null, $date=null)
+ 	{
+ 		//echo "adding $index, $code_id, $dimension_id, $amount, $reference<br>";
+@@ -535,4 +545,10 @@ function gl_item($code_id=null, $dimension_id=0, $dimension2_id=0, $amount=0, $m
+ 		$this->reference = $memo;
+ 		$this->date = $date;
+ 	}
++
++	function gl_item($code_id=null, $dimension_id=0, $dimension2_id=0, $amount=0, $memo='',
++		$act_descr=null, $person_id=null, $date=null)
++	{
++        self::__construct($code_id, $dimension_id, $dimension2_id, $amount, $memo, $act_descr, $person_id, $date);
++	}
+ }
+diff --git a/includes/ui/simple_crud_class.inc b/includes/ui/simple_crud_class.inc
+index 05d92801..683fe8e9 100644
+--- a/includes/ui/simple_crud_class.inc
++++ b/includes/ui/simple_crud_class.inc
+@@ -26,7 +26,7 @@ class simple_crud {
+ 	var $dec;
+ 	//
+ 	//
+-	function simple_crud($name, $fields = null)
++	function __construct($name, $fields = null)
+ 	{
+ 		$this->name = $name;
+ 		$this->pre_handlers = array(
+@@ -60,6 +60,12 @@ function simple_crud($name, $fields = null)
+ 		$this->fields = $fields;
+ 		$this->selected_id = $this->_none;
+ 	}
++
++	function simple_crud($name, $fields = null)
++	{
++        self::__construct($name, $fields);
++	}
++	
+ 	/*
+ 		Input/output formatters - convert values between php/user domains.
+ 	*/
+diff --git a/purchasing/includes/po_class.inc b/purchasing/includes/po_class.inc
+index b197cb03..af39e15c 100644
+--- a/purchasing/includes/po_class.inc
++++ b/purchasing/includes/po_class.inc
+@@ -47,13 +47,18 @@ class purch_order
+ 
+ 	var $fixed_asset = false;
+ 
+-	function purch_order()
++	function __construct()
+ 	{
+ 		/*Constructor function initialises a new purchase order object */
+ 		$this->line_items = array();
+ 		$this->lines_on_order = $this->order_no = $this->supplier_id = 0;
+ 	}
+ 	
++	function purch_order()
++	{
++        self::__construct();
++	}
++	
+ 	function set_supplier($supplier_id, $supplier_name, $curr_code, $tax_group_id, $tax_included)
+ 	{
+ 		$this->supplier_id = $supplier_id;
+diff --git a/purchasing/includes/supp_trans_class.inc b/purchasing/includes/supp_trans_class.inc
+index 00226d9f..15209196 100644
+--- a/purchasing/includes/supp_trans_class.inc
++++ b/purchasing/includes/supp_trans_class.inc
+@@ -49,13 +49,18 @@ class supp_trans
+ 	var $dimension,
+ 		$dimension2;
+ 
+-	function supp_trans($trans_type, $trans_no=0)
++	function __construct($trans_type, $trans_no=0)
+ 	{
+ 		$this->trans_type = $trans_type;
+ 		/*Constructor function initialises a new Supplier Transaction object */
+ 		$this->read($trans_type, $trans_no);
+ 	}
+ 
++	function supp_trans($trans_type, $trans_no=0)
++	{
++		self::__construct($trans_type, $trans_no);
++	}
++
+ 	function read($trans_type, $trans_no)
+ 	{
+ 		$this->trans_type = $trans_type;
+@@ -230,7 +235,7 @@ class grn_item
+ 	var $gl_code;
+ 	var $tax_included;
+ 
+-	function grn_item ($id, $po_detail_item, $item_code, $item_description, $qty_recd, 
++	function __construct ($id, $po_detail_item, $item_code, $item_description, $qty_recd, 
+ 		$prev_quantity_inv, $this_quantity_inv, $order_price, $chg_price,
+ 		$std_cost_unit, $gl_code, $tax_included)
+ 	{
+@@ -249,6 +254,15 @@ function grn_item ($id, $po_detail_item, $item_code, $item_description, $qty_rec
+ 		$this->tax_included = $tax_included;
+ 	}
+ 
++	function grn_item ($id, $po_detail_item, $item_code, $item_description, $qty_recd, 
++		$prev_quantity_inv, $this_quantity_inv, $order_price, $chg_price,
++		$std_cost_unit, $gl_code, $tax_included)
++	{
++		self::__construct($id, $po_detail_item, $item_code, $item_description, $qty_recd, 
++		$prev_quantity_inv, $this_quantity_inv, $order_price, $chg_price,
++		$std_cost_unit, $gl_code, $tax_included);
++	}
++
+ 	function full_charge_price($tax_group_id, $tax_group=null)
+ 	{
+ 		return get_full_price_for_item($this->item_code, 
+@@ -274,7 +288,7 @@ class gl_codes
+ 	var $amount;
+ 	var $memo_;
+ 
+-	function gl_codes ($Counter, $gl_code, $gl_act_name, $gl_dim, $gl_dim2, $amount, $memo_)
++	function __construct ($Counter, $gl_code, $gl_act_name, $gl_dim, $gl_dim2, $amount, $memo_)
+ 	{
+ 
+ 	/* Constructor function to add a new gl_codes object with passed params */
+@@ -286,5 +300,10 @@ function gl_codes ($Counter, $gl_code, $gl_act_name, $gl_dim, $gl_dim2, $amount,
+ 		$this->amount = $amount;
+ 		$this->memo_= $memo_;
+ 	}
++
++	function gl_codes ($Counter, $gl_code, $gl_act_name, $gl_dim, $gl_dim2, $amount, $memo_)
++	{
++	    self::__construct($Counter, $gl_code, $gl_act_name, $gl_dim, $gl_dim2, $amount, $memo_);
++	}
+ }
+ 
+diff --git a/reporting/includes/Workbook.php b/reporting/includes/Workbook.php
+index 30a716cb..fbfc86d2 100644
+--- a/reporting/includes/Workbook.php
++++ b/reporting/includes/Workbook.php
+@@ -178,7 +178,7 @@ class ole_pps
+     # _new (OLE::Storage_Lite::PPS)
+     #   for OLE::Storage_Lite
+     #------------------------------------------------------------------------------
+-    function ole_pps($iNo, $sNm, $iType, $iPrev, $iNext, $iDir,
++    function __construct($iNo, $sNm, $iType, $iPrev, $iNext, $iDir,
+                      $raTime1st, $raTime2nd, $iStart, $iSize,
+                      $sData=false, $raChild=false) 
+     {
+@@ -199,6 +199,15 @@ function ole_pps($iNo, $sNm, $iType, $iPrev, $iNext, $iDir,
+         $this->_PPS_FILE  = NULL;
+     }
+ 
++    function ole_pps($iNo, $sNm, $iType, $iPrev, $iNext, $iDir,
++                     $raTime1st, $raTime2nd, $iStart, $iSize,
++                     $sData=false, $raChild=false) 
++	{
++        self::__construct($iNo, $sNm, $iType, $iPrev, $iNext, $iDir,
++                     $raTime1st, $raTime2nd, $iStart, $iSize,
++                     $sData, $raChild);
++	}
++
+     #------------------------------------------------------------------------------
+     # _DataLen (OLE::Storage_Lite::PPS)
+     # Check for update
+@@ -315,7 +324,7 @@ function _savePpsWk($rhInfo)
+ 
+ class ole_pps_file extends ole_pps 
+ {
+-    function ole_pps_file($sNm, $sData=false, $sFile=false) 
++    function __construct($sNm, $sData=false, $sFile=false) 
+     {
+         $this->No         = false;
+         $this->Name       = $sNm;
+@@ -350,6 +359,11 @@ function ole_pps_file($sNm, $sData=false, $sFile=false)
+         }
+     }
+ 
++    function ole_pps_file($sNm, $sData=false, $sFile=false) 
++	{
++        self::__construct($sNm, $sData, $sFile);
++	}
++
+     function append ($sData) 
+     {
+         if ($this->_PPS_FILE) 
+@@ -366,7 +380,7 @@ function append ($sData)
+ 
+ class ole_pps_root extends ole_pps 
+ {
+-    function ole_pps_root($raTime1st=false, $raTime2nd=false, $raChild=false) 
++    function __construct($raTime1st=false, $raTime2nd=false, $raChild=false) 
+     {
+         $this->No         = false;
+         $this->Name       = Asc2Ucs('Root Entry');
+@@ -382,6 +396,11 @@ function ole_pps_root($raTime1st=false, $raTime2nd=false, $raChild=false)
+         $this->Child      = $raChild;
+     }
+ 
++    function ole_pps_root($raTime1st=false, $raTime2nd=false, $raChild=false) 
++	{
++        self::__construct($raTime1st, $raTime2nd, $raChild);
++	}
++
+ 	#------------------------------------------------------------------------------
+ 	# save (OLE::Storage_Lite::PPS::Root)
+ 	#------------------------------------------------------------------------------
+@@ -948,7 +967,7 @@ class Spreadsheet_Excel_Writer_BIFFwriter
+     *
+     * @access public
+     */
+-    function Spreadsheet_Excel_Writer_BIFFwriter()
++    function __construct()
+     {
+         $this->_byte_order = '';
+         $this->_data       = '';
+@@ -958,6 +977,11 @@ function Spreadsheet_Excel_Writer_BIFFwriter()
+         $this->_setByteOrder();
+     }
+ 
++    function Spreadsheet_Excel_Writer_BIFFwriter()
++	{
++        self::__construct();
++	}
++
+     /**
+     * Determine the byte order and store it as class data to avoid
+     * recalculating it for each call to new().
+@@ -1136,7 +1160,7 @@ class Spreadsheet_Excel_Writer_Validator
+     */
+     var $_parser;
+ 
+-    function Spreadsheet_Excel_Writer_Validator(&$parser)
++    function __construct(&$parser)
+     {
+         $this->_parser       = $parser;
+         $this->_type         = 0x01; // FIXME: add method for setting datatype
+@@ -1155,6 +1179,11 @@ function Spreadsheet_Excel_Writer_Validator(&$parser)
+         $this->_formula2    = '';
+     }
+ 
++    function Spreadsheet_Excel_Writer_Validator(&$parser)
++	{
++        self::__construct($parser);
++	}
++
+    function setPrompt($promptTitle = "\x00", $promptDescription = "\x00", $showPrompt = true)
+    {
+       $this->_showprompt = $showPrompt;
+@@ -1469,7 +1498,7 @@ class Spreadsheet_Excel_Writer_Format
+     * @param integer $index the XF index for the format.
+     * @param array   $properties array with properties to be set on initialization.
+     */
+-    function Spreadsheet_Excel_Writer_Format($BIFF_version, $index = 0, $properties =  array())
++    function __construct($BIFF_version, $index = 0, $properties =  array())
+     {
+         $this->_xf_index       = $index;
+         $this->_BIFF_version   = $BIFF_version;
+@@ -1525,6 +1554,11 @@ function Spreadsheet_Excel_Writer_Format($BIFF_version, $index = 0, $properties
+         }
+     }
+ 
++    function Spreadsheet_Excel_Writer_Format($BIFF_version, $index = 0, $properties =  array())
++	{
++        self::__construct($BIFF_version, $index, $properties);
++	}
++
+ 
+     /**
+     * Generate an Excel BIFF XF record (style or cell).
+@@ -2387,7 +2421,7 @@ class Spreadsheet_Excel_Writer_Parser
+     * @param integer $byte_order The byte order (Little endian or Big endian) of the architecture
+                                  (optional). 1 => big endian, 0 (default) little endian.
+     */
+-    function Spreadsheet_Excel_Writer_Parser($byte_order, $biff_version)
++    function __construct($byte_order, $biff_version)
+     {
+         $this->_current_char  = 0;
+         $this->_BIFF_version  = $biff_version;
+@@ -2401,6 +2435,11 @@ function Spreadsheet_Excel_Writer_Parser($byte_order, $biff_version)
+         $this->_references = array();
+     }
+ 
++    function Spreadsheet_Excel_Writer_Parser($byte_order, $biff_version)
++	{
++        self::__construct($byte_order, $biff_version);
++	}
++
+     /**
+     * Initialize the ptg and function hashes.
+     *
+@@ -4143,7 +4182,7 @@ class Spreadsheet_Excel_Writer_Worksheet extends Spreadsheet_Excel_Writer_BIFFwr
+     * @param mixed   &$parser      The formula parser created for the Workbook
+     * @access private
+     */
+-    function Spreadsheet_Excel_Writer_Worksheet($BIFF_version, $name,
++    function __construct($BIFF_version, $name,
+                                                 $index, &$activesheet,
+                                                 &$firstsheet, &$str_total,
+                                                 &$str_unique, &$str_table,
+@@ -4242,6 +4281,19 @@ function Spreadsheet_Excel_Writer_Worksheet($BIFF_version, $name,
+         $this->_initialize();
+     }
+ 
++    function Spreadsheet_Excel_Writer_Worksheet($BIFF_version, $name,
++                                                $index, &$activesheet,
++                                                &$firstsheet, &$str_total,
++                                                &$str_unique, &$str_table,
++                                                &$url_format, &$parser)
++	{
++        self::__construct($BIFF_version, $name,
++                                                $index, $activesheet,
++                                                $firstsheet, $str_total,
++                                                $str_unique, $str_table,
++                                                $url_format, $parser);
++	}
++
+     /**
+     * Open a tmp file to store the majority of the Worksheet data. If this fails,
+     * for example due to write permissions, store the data in memory. This can be
+@@ -7412,7 +7464,7 @@ class Spreadsheet_Excel_Writer_Workbook extends Spreadsheet_Excel_Writer_BIFFwri
+     * @param string filename for storing the workbook. "-" for writing to stdout.
+     * @access public
+     */
+-    function Spreadsheet_Excel_Writer_Workbook($filename)
++    function __construct($filename)
+     {
+         // It needs to call its parent's constructor explicitly
+         $this->Spreadsheet_Excel_Writer_BIFFwriter();
+@@ -7445,6 +7497,11 @@ function Spreadsheet_Excel_Writer_Workbook($filename)
+         $this->_tmp_dir         = '';
+     }
+ 
++	function references($filename)
++	{
++        self::__construct($filename);
++	}
++
+     /**
+     * Calls finalization methods.
+     * This method should always be the last one to be called on every workbook
+diff --git a/reporting/includes/barcodes.php b/reporting/includes/barcodes.php
+index 4454ec99..2647b803 100644
+--- a/reporting/includes/barcodes.php
++++ b/reporting/includes/barcodes.php
+@@ -81,10 +81,14 @@ class TCPDFBarcode {
+ 	 * @param string $code code to print
+  	 * @param string $type type of barcode: <ul><li>C39 : CODE 39</li><li>C39+ : CODE 39 with checksum</li><li>C39E : CODE 39 EXTENDED</li><li>C39E+ : CODE 39 EXTENDED with checksum</li><li>I25 : Interleaved 2 of 5</li><li>C128A : CODE 128 A</li><li>C128B : CODE 128 B</li><li>C128C : CODE 128 C</li><li>EAN13 : EAN 13</li><li>UPCA : UPC-A</li><li>POSTNET : POSTNET</li><li>CODABAR : CODABAR</li></ul>
+ 	 */
+-	function TCPDFBarcode($code, $type) {
++	function __construct($code, $type) {
+ 		$this->setBarcode($code, $type);
+ 	}
+ 	
++	function TCPDFBarcode($code, $type) {
++        self::__construct($code, $type);
++	}
++	
+ 	/** 
+ 	 * Return an array representations of barcode.
+  	 * @return array
+diff --git a/reporting/includes/class.graphic.inc b/reporting/includes/class.graphic.inc
+index da537dd5..672329e6 100644
+--- a/reporting/includes/class.graphic.inc
++++ b/reporting/includes/class.graphic.inc
+@@ -149,7 +149,7 @@ class graph
+ 	var $fontfile = "";
+ 	var $encoding;
+ 	
+-    function graph()
++    function __construct()
+     {
+     	global $SysPrefs;
+ 		$this->encoding = strtoupper($_SESSION['language']->encoding);
+@@ -171,6 +171,11 @@ function graph()
+ 		$this->latin_notation   = false;
+     }
+ 
++    function graph()
++    {
++        self::__construct();
++    }
++
+ 
+     function display($save="", $border=false)
+     {
+diff --git a/reporting/includes/class.mail.inc b/reporting/includes/class.mail.inc
+index e40ffe8d..738979bd 100644
+--- a/reporting/includes/class.mail.inc
++++ b/reporting/includes/class.mail.inc
+@@ -41,7 +41,7 @@ class email
+ 	var $charset = 'ISO-8859-1';
+ 	var $add_params;
+ 	
+-    function email($name, $mail)
++    function __construct($name, $mail)
+     {
+         $this->boundary = md5(uniqid(time()));
+ 		$this->header = "From: $name <$mail>\n";
+@@ -50,6 +50,11 @@ function email($name, $mail)
+ 			$this->bcc[] = $bcc;
+     }
+ 
++    function email($name, $mail)
++    {
++        self::__construct($name, $mail);
++	}
++	
+     function to($mail)
+     {
+     	$this->to[] = $mail;
+diff --git a/reporting/includes/class.pdf.inc b/reporting/includes/class.pdf.inc
+index 172c328a..367b387a 100644
+--- a/reporting/includes/class.pdf.inc
++++ b/reporting/includes/class.pdf.inc
+@@ -63,7 +63,7 @@
+ 
+ class Cpdf extends FPDI {
+ 
+-	function Cpdf($pageSize='A4', $lang=null, $pageOrientation='P')
++	function __construct($pageSize='A4', $lang=null, $pageOrientation='P')
+ 	{
+ 		$this->TCPDF($pageOrientation, 'pt', $pageSize);//, $uni, $enc);
+ 		$this->SetLang($lang);
+@@ -74,6 +74,12 @@ function Cpdf($pageSize='A4', $lang=null, $pageOrientation='P')
+ 		$this->SetLineWidth(1);
+ 		$this->cMargin = 0;
+ 	}
++
++	function Cpdf($pageSize='A4', $lang=null, $pageOrientation='P')
++	{
++        self::__construct($pageSize, $lang, $pageOrientation);
++	}
++
+ 	/*
+ 		Set lamguage for next report
+ 	*/
+diff --git a/reporting/includes/excel_report.inc b/reporting/includes/excel_report.inc
+index 3786a91a..e97ac9d6 100644
+--- a/reporting/includes/excel_report.inc
++++ b/reporting/includes/excel_report.inc
+@@ -60,7 +60,7 @@ class FrontReport extends Spreadsheet_Excel_Writer_Workbook
+ 	
+ 	var $sheet;
+ 
+-	function FrontReport($title, $filename, $size = 'A4', $fontsize = 9, $orientation = 'P', $margins = NULL, $excelColWidthFactor = 6.5)
++	function __construct($title, $filename, $size = 'A4', $fontsize = 9, $orientation = 'P', $margins = NULL, $excelColWidthFactor = 6.5)
+ 	{
+ 		global $SysPrefs, $page_security;
+ 
+@@ -173,6 +173,10 @@ function FrontReport($title, $filename, $size = 'A4', $fontsize = 9, $orientatio
+ 		$this->SetHeaderType("header");
+ 	}
+ 	
++	function FrontReport($title, $filename, $size = 'A4', $fontsize = 9, $orientation = 'P', $margins = NULL, $excelColWidthFactor = 6.5)
++	{
++        self::__construct($title, $filename, $size, $fontsize, $orientation, $margins, $excelColWidthFactor);
++	}
+ 
+ 	/*
+ 		Set header handler
+diff --git a/reporting/includes/fpdi/decoders/ASCII85Decode.php b/reporting/includes/fpdi/decoders/ASCII85Decode.php
+index 1f9492c1..9b508e52 100644
+--- a/reporting/includes/fpdi/decoders/ASCII85Decode.php
++++ b/reporting/includes/fpdi/decoders/ASCII85Decode.php
+@@ -28,10 +28,14 @@
+ 
+ class ASCII85Decode {
+ 
+-    function ASCII85Decode(&$fpdi) {
++    function __construct(&$fpdi) {
+         $this->fpdi =& $fpdi;
+     }
+ 
++    function ASCII85Decode(&$fpdi) {
++        self::__construct($fpdi);
++	}
++
+ 
+     function decode($in) {
+         $out = "";
+diff --git a/reporting/includes/fpdi/decoders/LZWDecode.php b/reporting/includes/fpdi/decoders/LZWDecode.php
+index 59d1b487..71f5a3d2 100644
+--- a/reporting/includes/fpdi/decoders/LZWDecode.php
++++ b/reporting/includes/fpdi/decoders/LZWDecode.php
+@@ -29,10 +29,14 @@ class LZWDecode {
+     var $nextBits = 0;
+     var $andTable = array(511, 1023, 2047, 4095);
+ 
+-    function LZWDecode(&$fpdi) {
++    function __construct(&$fpdi) {
+         $this->fpdi =& $fpdi;
+     }
+ 
++    function LZWDecode(&$fpdi) {
++        self::__construct($fpdi);
++	}
++
+     /**
+      * Method to decode LZW compressed data.
+      *
+diff --git a/reporting/includes/fpdi/fpdi_pdf_parser.php b/reporting/includes/fpdi/fpdi_pdf_parser.php
+index 8d9288e4..827e5602 100644
+--- a/reporting/includes/fpdi/fpdi_pdf_parser.php
++++ b/reporting/includes/fpdi/fpdi_pdf_parser.php
+@@ -66,7 +66,7 @@ class fpdi_pdf_parser extends pdf_parser {
+      * @param string $filename  Source-Filename
+      * @param object $fpdi      Object of type fpdi
+      */
+-    function fpdi_pdf_parser($filename,&$fpdi) {
++    function __construct($filename,&$fpdi) {
+         $this->fpdi =& $fpdi;
+ 		$this->filename = $filename;
+ 		
+@@ -82,6 +82,10 @@ function fpdi_pdf_parser($filename,&$fpdi) {
+         $this->page_count = count($this->pages);
+     }
+     
++    function fpdi_pdf_parser($filename,&$fpdi) {
++        self::__construct($filename,$fpdi);
++	}
++
+     /**
+      * Overwrite parent::error()
+      *
+diff --git a/reporting/includes/fpdi/pdf_context.php b/reporting/includes/fpdi/pdf_context.php
+index ce0b0e0c..068a422d 100644
+--- a/reporting/includes/fpdi/pdf_context.php
++++ b/reporting/includes/fpdi/pdf_context.php
+@@ -28,11 +28,15 @@ class pdf_context {
+ 
+ 	// Constructor
+ 
+-	function pdf_context($f) {
++	function __construct($f) {
+ 		$this->file = $f;
+ 		$this->reset();
+ 	}
+ 
++	function pdf_context($f) {
++        self::__construct($f);
++	}
++
+ 	// Optionally move the file
+ 	// pointer to a new location
+ 	// and reset the buffered data
+diff --git a/reporting/includes/fpdi/pdf_parser.php b/reporting/includes/fpdi/pdf_parser.php
+index b47ea7ac..87f9b902 100644
+--- a/reporting/includes/fpdi/pdf_parser.php
++++ b/reporting/includes/fpdi/pdf_parser.php
+@@ -90,7 +90,7 @@ class pdf_parser {
+      *
+      * @param string $filename  Source-Filename
+      */
+-	function pdf_parser($filename) {
++	function __construct($filename) {
+         $this->filename = $filename;
+         
+         $this->f = @fopen($this->filename, "rb");
+@@ -111,6 +111,10 @@ function pdf_parser($filename) {
+         $this->pdf_read_root();
+     }
+     
++	function pdf_parser($filename) {
++        self::__construct($filename);
++	}
++
+     /**
+      * Close the opened file
+      */
+diff --git a/reporting/includes/pdf_report.inc b/reporting/includes/pdf_report.inc
+index 65aaaf9e..34f99a54 100644
+--- a/reporting/includes/pdf_report.inc
++++ b/reporting/includes/pdf_report.inc
+@@ -70,7 +70,7 @@ class FrontReport extends Cpdf
+ 	
+ 	var $dest;	// destination: email or printer
+ 	
+-	function FrontReport($title, $filename, $size = 'A4', $fontsize = 9, $orientation = 'P', $margins = NULL, $excelColWidthFactor = NULL)
++	function __construct($title, $filename, $size = 'A4', $fontsize = 9, $orientation = 'P', $margins = NULL, $excelColWidthFactor = NULL)
+ 	{
+ 		global $page_security;
+ 
+@@ -225,6 +225,10 @@ function FrontReport($title, $filename, $size = 'A4', $fontsize = 9, $orientatio
+ 		$this->Cpdf($size, $_SESSION['language']->code, $orientation);
+ 	}
+ 	
++	function FrontReport($title, $filename, $size = 'A4', $fontsize = 9, $orientation = 'P', $margins = NULL, $excelColWidthFactor = NULL) {
++        self::__construct($title, $filename, $size, $fontsize, $orientation, $margins, $excelColWidthFactor);
++	}
++	
+ 	/*
+ 	 * Select the font and style to use for following output until
+ 	 * it's changed again.
+diff --git a/reporting/includes/printer_class.inc b/reporting/includes/printer_class.inc
+index e2de6657..05e2fb49 100644
+--- a/reporting/includes/printer_class.inc
++++ b/reporting/includes/printer_class.inc
+@@ -14,7 +14,7 @@ class remote_printer {
+    	//
+ 	//	Setting connection parameters
+ 	//
+-    function remote_printer($queue, $host='', $port=515, $timeout=20){
++    function __construct($queue, $host='', $port=515, $timeout=20){
+ 		if ($host == '')
+ 			$host = $_SERVER['REMOTE_ADDR']; // default is user's host
+         $this->host = $host;
+@@ -22,6 +22,12 @@ function remote_printer($queue, $host='', $port=515, $timeout=20){
+         $this->timeout = $timeout;
+         $this->queue = $queue;
+     }
++
++    function remote_printer($queue, $host='', $port=515, $timeout=20)
++    {
++        self::__construct($queue, $host, $port, $timeout);
++	}
++
+ 	//
+ 	//	Send file to remote network printer.
+ 	// 
+diff --git a/reporting/includes/reports_classes.inc b/reporting/includes/reports_classes.inc
+index 647209f8..a65078ac 100644
+--- a/reporting/includes/reports_classes.inc
++++ b/reporting/includes/reports_classes.inc
+@@ -462,13 +462,18 @@ class Report
+ 	var $ar_params;
+ 	var $controls;
+ 	
+-	function Report($id, $name, $ar_params = null)
++	function __construct($id, $name, $ar_params = null)
+ 	{
+ 		$this->id = $id;
+ 		$this->name = $name;
+ 		if ($ar_params) $this->set_controls($ar_params);
+ 	}
+ 	
++	function Report($id, $name, $ar_params = null)
++	{
++        self::__construct($id, $name, $ar_params);
++	}
++	
+ 	function set_controls($ar_params) {
+ 		$this->controls = $ar_params;
+ 	}
+diff --git a/reporting/includes/tcpdf.php b/reporting/includes/tcpdf.php
+index 6e7b6f4a..db03eeff 100644
+--- a/reporting/includes/tcpdf.php
++++ b/reporting/includes/tcpdf.php
+@@ -1112,7 +1112,7 @@ class TCPDF {
+ 		 * @param boolean $unicode TRUE means that the input text is unicode (default = true)
+ 		 * @param String $encoding charset encoding; default is UTF-8
+ 		 */
+-		function TCPDF($orientation='P', $unit='mm', $format='A4', $uni=true, $encoding="UTF-8") {
++		function __construct($orientation='P', $unit='mm', $format='A4', $uni=true, $encoding="UTF-8") {
+ 			if ($uni) // Fix for FrontAccounting
+ 			{
+ 				global $unicode, $unicode_mirror, $unicode_arlet, $laa_array, $diacritics;
+@@ -1216,6 +1216,10 @@ function TCPDF($orientation='P', $unit='mm', $format='A4', $uni=true, $encoding=
+ 			$this->utf8Bidi(array(""));
+ 		}
+ 
++		function TCPDF($orientation='P', $unit='mm', $format='A4', $uni=true, $encoding="UTF-8") {
++	        self::__construct($orientation, $unit, $format, $uni, $encoding);
++		}
++	
+ 		/**
+ 		 * Default destructor.
+ 		 * @since 1.53.0.TC016
+diff --git a/sales/includes/cart_class.inc b/sales/includes/cart_class.inc
+index 13f383bf..311ac1b8 100644
+--- a/sales/includes/cart_class.inc
++++ b/sales/includes/cart_class.inc
+@@ -90,7 +90,7 @@ class Cart
+ 	//  $trans_no!=0 && $prepare_child==true => prepare for child doc entry
+ 	//	$prepare_child is set to ST_SALESINVOICE for prepayment invoices
+ 	//
+-	function Cart($type, $trans_no=0, $prepare_child=false) {
++	function __construct($type, $trans_no=0, $prepare_child=false) {
+ 		/*Constructor function initialises a new shopping cart */
+ 		$this->line_items = array();
+ 		$this->sales_type = "";
+@@ -105,6 +105,10 @@ function Cart($type, $trans_no=0, $prepare_child=false) {
+ 		$this->cart_id = uniqid('');
+ 	}
+ 
++	function Cart($type, $trans_no=0, $prepare_child=false) {
++        self::__construct($type, $trans_no, $prepare_child);
++	}
++
+ 	/*
+ 		Optional sorting items by stock_id.
+ 	*/
+@@ -693,7 +697,7 @@ class line_details
+ 	var $qty_old = 0;
+ 
+ 
+-	function line_details ($stock_id, $qty, $prc, $disc_percent,
++	function __construct($stock_id, $qty, $prc, $disc_percent,
+ 		$qty_done, $standard_cost, $description, $id=0, $src_no=0, $src_id=0)
+ 	{
+ 	/* Constructor function to add a new LineDetail object with passed params */
+@@ -725,6 +729,13 @@ function line_details ($stock_id, $qty, $prc, $disc_percent,
+ 		$this->valid = true;
+ 	}
+ 
++	function line_details ($stock_id, $qty, $prc, $disc_percent,
++		$qty_done, $standard_cost, $description, $id=0, $src_no=0, $src_id=0)
++	{
++		self::__construct($stock_id, $qty, $prc, $disc_percent,
++			$qty_done, $standard_cost, $description, $id, $src_no, $src_id);
++	}
++	
+ 	// get unit price as stated on document
+ 	function line_price()
+ 	{
+diff --git a/sql/alter2.1.php b/sql/alter2.1.php
+index 6d2e767b..e972b16b 100644
+--- a/sql/alter2.1.php
++++ b/sql/alter2.1.php
+@@ -15,9 +15,14 @@ class fa2_1 extends fa_patch {
+ 	var $description;
+ 	var $sql = 'alter2.1.sql';
+ 
+-	function fa2_1() {
++	function __construct() {
+ 		$this->description = _('Upgrade from version 2.0 to 2.1');
+ 	}
++
++	function fa2_1() {
++        self::__construct();
++	}
++
+ 	//
+ 	//	Install procedure. All additional changes 
+ 	//	not included in sql file should go here.
+diff --git a/sql/alter2.2.php b/sql/alter2.2.php
+index 837f44ce..54528706 100644
+--- a/sql/alter2.2.php
++++ b/sql/alter2.2.php
+@@ -18,13 +18,17 @@ class fa2_2 extends fa_patch  {
+ 	var $preconf = true;
+ 	var $beta = false; // upgrade from 2.1 or 2.2beta; set in prepare()
+ 	
+-	function fa2_2() {
++	function __construct() {
+ 		global $security_groups;
+ 		$this->beta = !isset($security_groups);
+ 		$this->description = _('Upgrade from version 2.1/2.2beta to 2.2');
+ 		$this->preconf = fix_extensions();
+ 	}
+ 	
++	function fa2_2() {
++        self::__construct();
++	}
++	
+ 	//
+ 	//	Install procedure. All additional changes 
+ 	//	not included in sql file should go here.
+diff --git a/sql/alter2.3.php b/sql/alter2.3.php
+index f186ff62..f2ffe97c 100644
+--- a/sql/alter2.3.php
++++ b/sql/alter2.3.php
+@@ -17,10 +17,14 @@ class fa2_3 extends fa_patch {
+ 	var $preconf = true;
+ 	var $beta = false; // upgrade from 2.2 or 2.3beta;
+ 	
+-	function fa2_3() {
++	function __construct() {
+ 		$this->description = _('Upgrade from version 2.2 to 2.3');
+ 	}
+ 	
++	function fa2_3() {
++        self::__construct();
++	}
++	
+ 	//
+ 	//	Install procedure. All additional changes 
+ 	//	not included in sql file should go here.
+diff --git a/sql/alter2.4.php b/sql/alter2.4.php
+index 5e9b83db..729457df 100644
+--- a/sql/alter2.4.php
++++ b/sql/alter2.4.php
+@@ -18,11 +18,15 @@ class fa2_4 extends fa_patch {
+ 	var $preconf = true;
+ 	var	$max_upgrade_time = 900;	// table recoding is really long process
+ 	
+-	function fa2_4() {
++	function __construct() {
+ 		parent::fa_patch();
+ 		$this->description = _('Upgrade from version 2.3 to 2.4');
+ 	}
+ 	
++	function fa2_4() {
++        self::__construct();
++	}
++	
+     /*
+ 	    Shows parameters to be selected before upgrade (if any)
+ 	*/
+diff --git a/sql/alter2.4rc1.php b/sql/alter2.4rc1.php
+index 93464054..b63eade2 100644
+--- a/sql/alter2.4rc1.php
++++ b/sql/alter2.4rc1.php
+@@ -18,11 +18,15 @@ class fa2_4rc1 extends fa_patch {
+ 	var $preconf = true;
+ 	var	$max_upgrade_time = 900;	// table recoding is really long process
+ 
+-	function fa2_4rc1() {
++	function __construct() {
+ 		parent::fa_patch();
+ 		$this->description = _('Upgrade from version 2.4beta to 2.4RC1');
+ 	}
+ 
++	function fa2_4rc1() {
++        self::__construct();
++	}
++
+     /*
+ 	    Shows parameters to be selected before upgrade (if any)
+ 	*/
+-- 
+2.14.2.windows.1
+
